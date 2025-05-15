@@ -39,8 +39,8 @@ if __name__ == "__main__":
         word_list = f.read().splitlines()
     
     # choose a random word to guess
-    #word_to_guess = random.choice(word_list).strip()
-    word_to_guess = "eager"
+    word_to_guess = random.choice(word_list).strip()
+    #word_to_guess = "salet"
     print("Word to guess:", word_to_guess)
 
 

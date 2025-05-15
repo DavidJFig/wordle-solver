@@ -30,10 +30,8 @@ def update_word_list(word_list, non_allowed_letters, allowed_letters, correct_le
 
 if __name__ == "__main__":
     
-    # starting word
-    starting_guess = "salet"
 
-    num_guesses = 50
+    max_num_guesses = 50
 
 
     # read word list from file
@@ -41,7 +39,8 @@ if __name__ == "__main__":
         word_list = f.read().splitlines()
     
     # choose a random word to guess
-    word_to_guess = random.choice(word_list).strip()
+    #word_to_guess = random.choice(word_list).strip()
+    word_to_guess = "eager"
     print("Word to guess:", word_to_guess)
 
 
@@ -51,7 +50,12 @@ if __name__ == "__main__":
     correct_letters = {}                 # letters in the word and the positions they are certainly in
 
 
-    for i in range(num_guesses):
+
+    # starting word
+    starting_guess = "adieu"
+    #starting_guess = random.choice(word_list).strip()
+
+    for i in range(max_num_guesses):
         print("Guess #", i + 1)
         if i == 0:
             guess = starting_guess

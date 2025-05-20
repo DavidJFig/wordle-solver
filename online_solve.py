@@ -1,7 +1,15 @@
 from PIL import ImageGrab, Image
 import mss
 
-bbox_coordinates = (100, 200, 500, 400) # (left, top, right, bottom)
+
+# Ollama Constants
+MODEL = "gemma3:4b"
+CHAT_API_URL = "http://localhost:11434/api/chat"
+
+
+
+
+initial_region = (280, 180, 650, 250) # (left, top, right, bottom)
 
 def capture_screen_region(bbox):
     try:
@@ -30,6 +38,8 @@ if __name__ == "__main__":
     
     if screenshot_region:
         screenshot_region.show()  # Display the captured image for verification
+        # save image
+        screenshot_region.save("screenshot.png")
 
     if screenshot_region:
         extracted_text = get_characters(screenshot_region)

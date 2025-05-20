@@ -59,13 +59,9 @@ def get_characters(image):
     
     response = response.json()
     print(f"Raw VLM Response: {response} with type {type(response)}")
-
-
-    content = json.loads(response["message"]["content"])
-    print(f"VLM Response content: {content} with type {type(content)}")
     
 
-    return content
+    return response
 
 if __name__ == "__main__":
 

@@ -8,19 +8,19 @@ from io import BytesIO
 import pyautogui
 import random
 from collections import defaultdict
-from solve import update_word_list
+from solver_logic import update_word_list
 
 # Ollama Constants
 MODEL = "gemma3:4b"
 CHAT_API_URL = "http://localhost:11434/api/chat"
-
+USE_VLM = True
 
 starting_guess = "salet"
 
 
 
 
-region_coordinates = (280, 180, 650, 250) # (left, top, right, bottom)
+region_coordinates = (300, 192, 646, 254) # (left, top, right, bottom)
 
 def capture_screen_region(bbox):
     try:
@@ -49,7 +49,7 @@ def get_characters(image):
         "messages": [
             {
                 "role": "user",
-                "content": "Extract the 5 letters shown in the image. Return exactly those 5 letters as a mapping of letters to their color, which can be either green, yellow or gray. ",
+                "content": "Extract the 5 letters shown in the image. Return exactly those 5 letters with ABSOLUTELY NO OTHER TEXT OR PUNCTUATION. THERE MUST BE EXACTLY 5 LETTERS. ",
                 "images": [image]
             }
         ],
@@ -65,12 +65,30 @@ def get_characters(image):
     
     response = response.json()
     
-    print(f"VLM response: {response}")
+    # print(f"VLM response: {response}")
 
     return response["message"]["content"]
 
+
+
+def get_pixel_color(image_path, x, y):
+    try:
+        img = Image.open(image_path)
+        r, g, b = img.getpixel((x, y))
+        return (r, g, b)
+    except FileNotFoundError:
+        print(f"Error: Image file not found at {image_path}")
+        return None
+    except IndexError:
+        print(f"Error: Pixel coordinates ({x}, {y}) are out of bounds for the image.")
+        return None
+    
+
+
+
 if __name__ == "__main__":
 
+    
 
     # read word list from file
     with open("shuffled_word_list.txt", "r") as f:
@@ -84,7 +102,7 @@ if __name__ == "__main__":
 
     # wait for button press
     input("Press Enter to start solving the wordle and then switch to wordle screen...")
-    time.sleep(5)
+    time.sleep(3)
 
     print("Starting solver...")
 
@@ -109,7 +127,7 @@ if __name__ == "__main__":
 
         # wait for wordle to update
         print("Waiting for Wordle to update...", end="", flush=True)
-        time.sleep(5)
+        time.sleep(3)
         print("Moving on.")
 
         
@@ -124,29 +142,55 @@ if __name__ == "__main__":
 
         # save the image
         screenshot_region.save(f"screenshot{i}.png", format="PNG")  # Save the image as PNG
-        
-        
+        time.sleep(0.5)
+      
+                
         if screenshot_region:
-            screenshot_region.show()  
-
             # Extract text from the captured image using the VLM
+            if not USE_VLM:
+                print("VLM is disabled. Exiting...")
+                exit(1)
+            print("VLM is processing the image...", flush=True)
             extracted_text = get_characters(img_base64)
 
             if extracted_text is None:
                 print("VLM Error: No text extracted from the image.")
                 exit(1) # TODO: handle VLM error
 
-        # update word list
-        for letter, color in extracted_text.items():
-            if color == "green":
-                correct_letters[letter] = guess.index(letter)
-            elif color == "yellow":
-                allowed_letters[letter].append(guess.index(letter))
-            elif color == "gray":
-                non_allowed_letters.add(letter)
-            else:
-                print(f"Unknown color '{color}' for letter '{letter}'")
+
+            # get color of each letter
+            colors_pixels = []
+            colors = []
+            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 50, 10))
+            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 130, 10))
+            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 190, 10))
+            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 250, 10))
+            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 310, 10))
+
+            for color in colors_pixels:
+                if color == (181, 159, 59):
+                    colors.append("yellow")
+                elif color == (58, 58, 60):
+                    colors.append("gray")
+                else:
+                    colors.append("green")
+
+
+            # update word list
+            for letter, color in zip(extracted_text, colors):
+                print(f"Letter: {letter}, Color: {color}")
+                if color == "green":
+                    correct_letters[letter] = extracted_text.index(letter)
+                    print(f"Correct letter: {letter} at position {correct_letters[letter]}")
+                elif color == "yellow":
+                    allowed_letters[letter].append(extracted_text.index(letter))
+                    print(f"Allowed letter: {letter} but not at position {allowed_letters[letter]}")
+                elif color == "gray":
+                    non_allowed_letters.add(letter)
+                    print(f"Non-allowed letter: {letter}")
         else:
             print("Failed to capture the screen region.")
 
         region_coordinates = (region_coordinates[0], region_coordinates[1] + 70, region_coordinates[2], region_coordinates[3] + 70)
+
+        time.sleep(1)

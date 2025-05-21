@@ -1,29 +1,9 @@
 import random
 from collections import defaultdict
 
+from solver_logic import update_word_list
 
 
-def update_word_list(word_list, non_allowed_letters, allowed_letters, correct_letters):
-
-    new_word_list = []
-    for word in word_list:
-        # check if the word contains any non-allowed letters
-        if any(letter in non_allowed_letters for letter in word):
-            continue
-
-
-        for letter, positions in allowed_letters.items():
-            # check if the word contains the letter in the non allowed positions
-            if any(word[i] == letter for i in positions):
-                continue
-
-        # check if the word does not contain letters in the correct list at the right positions
-        if any(word[i] != letter for letter, i in correct_letters.items()):
-            continue
-
-        new_word_list.append(word)
-
-    return new_word_list
 
 
 

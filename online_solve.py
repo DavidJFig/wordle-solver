@@ -20,7 +20,7 @@ starting_guess = "salet"
 
 
 
-initial_region = (280, 180, 650, 250) # (left, top, right, bottom)
+region_coordinates = (280, 180, 650, 250) # (left, top, right, bottom)
 
 def capture_screen_region(bbox):
     try:
@@ -49,7 +49,7 @@ def get_characters(image):
         "messages": [
             {
                 "role": "user",
-                "content": "Extract the 5 letters shown in the image. Return exactly those 5 letters in order with no spaces, punctuation, or additional text.",
+                "content": "Extract the 5 letters shown in the image. Return exactly those 5 letters as a mapping of letters to their color, which can be either green, yellow or gray. ",
                 "images": [image]
             }
         ],
@@ -65,6 +65,7 @@ def get_characters(image):
     
     response = response.json()
     
+    print(f"VLM response: {response}")
 
     return response["message"]["content"]
 
@@ -75,12 +76,6 @@ if __name__ == "__main__":
     with open("shuffled_word_list.txt", "r") as f:
         word_list = f.read().splitlines()
     
-    # choose a random word to guess
-    word_to_guess = random.choice(word_list).strip()
-    print("Word to guess:", word_to_guess)
-
-
-
 
     non_allowed_letters = set()          # letters certainly not in the word
     allowed_letters = defaultdict(list)  # letters in the word and the positions they cannot be in
@@ -102,59 +97,56 @@ if __name__ == "__main__":
             guess = random.choice(word_list)
         print("Guess:", guess)
 
-        if guess == word_to_guess:
-            print("Correct! The word was: ", word_to_guess)
-            break
 
 
-
-        for index, letter in enumerate(guess):
-            if letter in word_to_guess:
-                if word_to_guess[index] == letter:
-                    correct_letters[letter] = index
-                else:
-                    if letter not in allowed_letters:
-                        allowed_letters[letter].append(index)
-            else:
-                non_allowed_letters.add(letter)
 
         for letter in guess:
             pyautogui.press(letter)
-            time.sleep(0.5)  # Add a small delay to simulate typing
+            time.sleep(0.5)
 
         pyautogui.press("enter")
     
 
         # wait for wordle to update
-        print("Waiting for Wordle to update...", end="")
+        print("Waiting for Wordle to update...", end="", flush=True)
         time.sleep(5)
         print("Moving on.")
 
         
 
-        screenshot_region = capture_screen_region(initial_region)
+        screenshot_region = capture_screen_region(region_coordinates)
 
         # Convert to base64
         buffered = BytesIO()
-        screenshot_region.save(buffered, format="PNG")  # You can change to "JPEG" if needed
+        screenshot_region.save(buffered, format="PNG") 
         img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        print(f"Captured region", flush=True)
+        print(f"Captured region with coordinates {region_coordinates}", flush=True)
 
         # save the image
-        #screenshot_region.save("screenshot.png", format="PNG")  # Save the image as PNG
+        screenshot_region.save(f"screenshot{i}.png", format="PNG")  # Save the image as PNG
         
         
         if screenshot_region:
-            # screenshot_region.show()  
+            screenshot_region.show()  
 
             # Extract text from the captured image using the VLM
             extracted_text = get_characters(img_base64)
 
-            if extracted_text:
-                print("\n--- Extracted Text ---")
-                print(extracted_text)
-                print("----------------------")
+            if extracted_text is None:
+                print("VLM Error: No text extracted from the image.")
+                exit(1) # TODO: handle VLM error
+
+        # update word list
+        for letter, color in extracted_text.items():
+            if color == "green":
+                correct_letters[letter] = guess.index(letter)
+            elif color == "yellow":
+                allowed_letters[letter].append(guess.index(letter))
+            elif color == "gray":
+                non_allowed_letters.add(letter)
             else:
-                print("\nNo text could be extracted from the region, or an error occurred.")
+                print(f"Unknown color '{color}' for letter '{letter}'")
         else:
             print("Failed to capture the screen region.")
+
+        region_coordinates = (region_coordinates[0], region_coordinates[1] + 70, region_coordinates[2], region_coordinates[3] + 70)

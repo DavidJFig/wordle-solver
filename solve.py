@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
 
     # starting word
-    starting_guess = "adieu"
+    starting_guess = "salet"
     #starting_guess = random.choice(word_list).strip()
 
     for i in range(max_num_guesses):

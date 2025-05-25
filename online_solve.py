@@ -91,7 +91,8 @@ if __name__ == "__main__":
     for i in range(6):
         print("Guess #", i + 1)
         if i == 0:
-            guess = starting_guess
+            # guess = starting_guess
+            guess = random.choice(word_list)
         else:
             word_list = update_word_list(word_list, non_allowed_letters, allowed_letters, correct_letters)
             guess = random.choice(word_list)
@@ -120,7 +121,7 @@ if __name__ == "__main__":
         buffered = BytesIO()
         screenshot_region.save(buffered, format="PNG") 
         img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        print(f"Captured region with coordinates {region_coordinates}", flush=True)
+        print(f"Captured screenshot.", flush=True)
 
         # save the image
         os.makedirs("screenshots", exist_ok=True)
@@ -142,7 +143,7 @@ if __name__ == "__main__":
 
             # convert to lowercase
             extracted_text = extracted_text.lower()
-            
+
             # get color of each letter
             colors_pixels = []
             colors = []
@@ -160,19 +161,24 @@ if __name__ == "__main__":
                 else:
                     colors.append("green")
 
-
+            correct_letter_count = 0
             # update word list
             for letter, color in zip(extracted_text, colors):
-                print(f"Letter: {letter}, Color: {color}")
+                #print(f"Letter: {letter}, Color: {color}")
                 if color == "green":
                     correct_letters[letter] = extracted_text.index(letter)
                     print(f"Correct letter: {letter} at position {correct_letters[letter]}")
+                    correct_letter_count += 1
                 elif color == "yellow":
                     allowed_letters[letter].append(extracted_text.index(letter))
                     print(f"Allowed letter: {letter} but not at position {allowed_letters[letter]}")
                 elif color == "gray":
                     non_allowed_letters.add(letter)
                     print(f"Non-allowed letter: {letter}")
+                
+            if correct_letter_count == 5:
+                print("Wordle solved! The word was: ", extracted_text)
+                exit(0)
         else:
             print("Failed to capture the screen region.")
 

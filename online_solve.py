@@ -10,11 +10,13 @@ import random
 from collections import defaultdict
 from utilities.solver_logic import update_word_list
 import os
+from ollama import generate
 
 # Ollama Constants
 MODEL = "gemma3:4b"
-CHAT_API_URL = "http://localhost:11434/api/chat"
+VLM_GENERATE_ENDPOINT = "http://localhost:11434/api/generate"
 USE_VLM = True
+PROMPT = "Extract the 5 letters shown in the image. Return exactly those 5 letters with ABSOLUTELY NO OTHER TEXT OR PUNCTUATION. THERE MUST BE EXACTLY 5 LETTERS. "
 
 starting_guess = "salet"
 
@@ -42,33 +44,12 @@ def get_characters(image):
         print("VLM Error: No image provided to VLM.")
         return None
     
-    
-    # print("VLM is processing the image...")
-    start_time = time.time()
-    data = {
-        "model": MODEL,
-        "messages": [
-            {
-                "role": "user",
-                "content": "Extract the 5 letters shown in the image. Return exactly those 5 letters with ABSOLUTELY NO OTHER TEXT OR PUNCTUATION. THERE MUST BE EXACTLY 5 LETTERS. ",
-                "images": [image]
-            }
-        ],
-        "stream": False,
-        "temperature": 0.1,
-    }
-    response = requests.post(CHAT_API_URL, json=data)
-    # print(f"VLM Request Time: {time.time() - start_time:.2f} seconds")
+    response = generate(MODEL, PROMPT, images=[image], stream=False, options={"temperature": 0.0})
+        
+    print(f"VLM response: {response.response}")
+    response = response.response
 
-    if response.status_code != 200:
-        print(f"VLM Error: {response.status_code} - {response.text}")
-        return None
-    
-    response = response.json()
-    
-    # print(f"VLM response: {response}")
-
-    return response["message"]["content"]
+    return response.strip().replace(" ", "").replace("\n", "").replace("\r", "")
 
 
 
@@ -79,10 +60,10 @@ def get_pixel_color(image_path, x, y):
         return (r, g, b)
     except FileNotFoundError:
         print(f"Error: Image file not found at {image_path}")
-        return None
+        exit(1)
     except IndexError:
         print(f"Error: Pixel coordinates ({x}, {y}) are out of bounds for the image.")
-        return None
+        exit(1)
     
 
 
@@ -159,15 +140,17 @@ if __name__ == "__main__":
                 print("VLM Error: No text extracted from the image.")
                 exit(1) # TODO: handle VLM error
 
-
+            # convert to lowercase
+            extracted_text = extracted_text.lower()
+            
             # get color of each letter
             colors_pixels = []
             colors = []
-            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 50, 10))
-            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 130, 10))
-            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 190, 10))
-            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 250, 10))
-            colors_pixels.append(get_pixel_color(f"screenshot{i}.png", 310, 10))
+            colors_pixels.append(get_pixel_color(f"screenshots/screenshot{i}.png", 50, 10))
+            colors_pixels.append(get_pixel_color(f"screenshots/screenshot{i}.png", 130, 10))
+            colors_pixels.append(get_pixel_color(f"screenshots/screenshot{i}.png", 190, 10))
+            colors_pixels.append(get_pixel_color(f"screenshots/screenshot{i}.png", 250, 10))
+            colors_pixels.append(get_pixel_color(f"screenshots/screenshot{i}.png", 310, 10))
 
             for color in colors_pixels:
                 if color == (181, 159, 59):

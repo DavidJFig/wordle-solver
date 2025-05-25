@@ -8,7 +8,8 @@ from io import BytesIO
 import pyautogui
 import random
 from collections import defaultdict
-from solver_logic import update_word_list
+from utilities.solver_logic import update_word_list
+import os
 
 # Ollama Constants
 MODEL = "gemma3:4b"
@@ -141,7 +142,8 @@ if __name__ == "__main__":
         print(f"Captured region with coordinates {region_coordinates}", flush=True)
 
         # save the image
-        screenshot_region.save(f"screenshot{i}.png", format="PNG")  # Save the image as PNG
+        os.makedirs("screenshots", exist_ok=True)
+        screenshot_region.save(f"screenshots/screenshot{i}.png", format="PNG")
         time.sleep(0.5)
       
                 

@@ -8,11 +8,7 @@ def update_word_list(word_list, non_allowed_letters, allowed_letters, correct_le
         if DEBUG:
             print(f"\nChecking word: {word}")
 
-        # exclude if contains any non-allowed letter
-        if any(letter in non_allowed_letters for letter in word):
-            if DEBUG:
-                print(f"Rejected (non-allowed letter in '{word}')")
-            continue
+
 
         # exclude if allowed letter is in a forbidden position or if allowed letter is missing
         allowed_fail = False
@@ -42,6 +38,19 @@ def update_word_list(word_list, non_allowed_letters, allowed_letters, correct_le
                 correct_fail = True
                 break
         if correct_fail:
+            continue
+
+        # remove letters from non_allowed letters if they are in correct_letters
+        for letter in correct_letters.keys():
+            if letter in non_allowed_letters:
+                if DEBUG:
+                    print(f"Removing '{letter}' from non-allowed letters")
+                non_allowed_letters.remove(letter)
+
+        # exclude if contains any non-allowed letter
+        if any(letter in non_allowed_letters for letter in word):
+            if DEBUG:
+                print(f"Rejected (non-allowed letter in '{word}')")
             continue
 
         # if we reach here, the word is valid to consider

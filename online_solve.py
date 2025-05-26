@@ -15,7 +15,7 @@ from ollama import generate
 # Ollama Constants
 MODEL = "gemma3:4b"
 VLM_GENERATE_ENDPOINT = "http://localhost:11434/api/generate"
-USE_VLM = True
+USE_VLM = False
 PROMPT = "Extract the 5 letters shown in the image. Return exactly those 5 letters with ABSOLUTELY NO OTHER TEXT OR PUNCTUATION. THERE MUST BE EXACTLY 5 LETTERS. "
 
 starting_guess = "salet"
@@ -132,17 +132,17 @@ if __name__ == "__main__":
         if screenshot_region:
             # Extract text from the captured image using the VLM
             if not USE_VLM:
-                print("VLM is disabled. Exiting...")
-                exit(1)
-            print("VLM is processing the image...", flush=True)
-            extracted_text = get_characters(img_base64)
+                extracted_text = guess
+            else:
+                print("VLM is processing the image...", flush=True)
+                extracted_text = get_characters(img_base64)
 
-            if extracted_text is None:
-                print("VLM Error: No text extracted from the image.")
-                exit(1) # TODO: handle VLM error
+                if extracted_text is None:
+                    print("VLM Error: No text extracted from the image.")
+                    exit(1) # TODO: handle VLM error
 
-            # convert to lowercase
-            extracted_text = extracted_text.lower()
+                # convert to lowercase
+                extracted_text = extracted_text.lower()
 
             # get color of each letter
             colors_pixels = []
@@ -179,8 +179,6 @@ if __name__ == "__main__":
             if correct_letter_count == 5:
                 print("Wordle solved! The word was: ", extracted_text)
                 exit(0)
-        else:
-            print("Failed to capture the screen region.")
 
         region_coordinates = (region_coordinates[0], region_coordinates[1] + 70, region_coordinates[2], region_coordinates[3] + 70)
 

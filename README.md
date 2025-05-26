@@ -1,6 +1,8 @@
 # wordle-solver
+
  
 A script that solves the official Wordle automatically.
+
 
 **Features**
 
@@ -12,6 +14,7 @@ Automatically chooses the next word and inputs it for you
 
 Easy to run and no installations necessary
 
+
 **How to Use**
 
 Open the Wordle website.
@@ -22,6 +25,7 @@ Run the online_solve.py script.
 Press enter when prompted and quickly click back to the wordle website.
 
 
+
 **How It Works**
 
 Loads a list of possible 5-letter words accepted by Wordle.
@@ -30,5 +34,7 @@ Narrows down possibilities with each guess using the color feedback from the gue
 
 Chooses high-value next guesses and repeats until the correct word is found or 6 guesses have been made.
 
-License
+
+**License**
+
 MIT License

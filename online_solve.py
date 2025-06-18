@@ -10,7 +10,7 @@ import random
 from collections import defaultdict
 from utilities.solver_logic import update_word_list
 import os
-from ollama import generate
+# from ollama import generate
 
 # Ollama Constants
 MODEL = "gemma3:4b"
@@ -39,17 +39,17 @@ def capture_screen_region(bbox):
     
     
 # Uses a VLM to read characters from the image
-def get_characters(image):
-    if image is None:
-        print("VLM Error: No image provided to VLM.")
-        return None
+# def get_characters(image):
+#     if image is None:
+#         print("VLM Error: No image provided to VLM.")
+#         return None
     
-    response = generate(MODEL, PROMPT, images=[image], stream=False, options={"temperature": 0.0})
+#     response = generate(MODEL, PROMPT, images=[image], stream=False, options={"temperature": 0.0})
         
-    print(f"VLM response: {response.response}")
-    response = response.response
+#     print(f"VLM response: {response.response}")
+#     response = response.response
 
-    return response.strip().replace(" ", "").replace("\n", "").replace("\r", "")
+#     return response.strip().replace(" ", "").replace("\n", "").replace("\r", "")
 
 
 
@@ -90,9 +90,10 @@ if __name__ == "__main__":
 
     for i in range(6):
         print("Guess #", i + 1)
+        print("Current word list length:", len(word_list))
         if i == 0:
-            # guess = starting_guess
-            guess = random.choice(word_list)
+            guess = starting_guess
+            #guess = random.choice(word_list)
         else:
             word_list = update_word_list(word_list, non_allowed_letters, allowed_letters, correct_letters)
             guess = random.choice(word_list)
@@ -133,16 +134,16 @@ if __name__ == "__main__":
             # Extract text from the captured image using the VLM
             if not USE_VLM:
                 extracted_text = guess
-            else:
-                print("VLM is processing the image...", flush=True)
-                extracted_text = get_characters(img_base64)
+            # else:
+            #     print("VLM is processing the image...", flush=True)
+            #     extracted_text = get_characters(img_base64)
 
-                if extracted_text is None:
-                    print("VLM Error: No text extracted from the image.")
-                    exit(1) # TODO: handle VLM error
+            #     if extracted_text is None:
+            #         print("VLM Error: No text extracted from the image.")
+            #         exit(1) # TODO: handle VLM error
 
-                # convert to lowercase
-                extracted_text = extracted_text.lower()
+            #     # convert to lowercase
+            #     extracted_text = extracted_text.lower()
 
             # get color of each letter
             colors_pixels = []

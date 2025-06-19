@@ -10,17 +10,9 @@ import random
 from collections import defaultdict
 from utilities.solver_logic import update_word_list
 import os
-# from ollama import generate
 
-# Ollama Constants
-MODEL = "gemma3:4b"
-VLM_GENERATE_ENDPOINT = "http://localhost:11434/api/generate"
-USE_VLM = False
-PROMPT = "Extract the 5 letters shown in the image. Return exactly those 5 letters with ABSOLUTELY NO OTHER TEXT OR PUNCTUATION. THERE MUST BE EXACTLY 5 LETTERS. "
 
 starting_guess = "salet"
-
-
 
 
 region_coordinates = (300, 192, 646, 254) # (left, top, right, bottom)
@@ -38,20 +30,6 @@ def capture_screen_region(bbox):
         return None
     
     
-# Uses a VLM to read characters from the image
-# def get_characters(image):
-#     if image is None:
-#         print("VLM Error: No image provided to VLM.")
-#         return None
-    
-#     response = generate(MODEL, PROMPT, images=[image], stream=False, options={"temperature": 0.0})
-        
-#     print(f"VLM response: {response.response}")
-#     response = response.response
-
-#     return response.strip().replace(" ", "").replace("\n", "").replace("\r", "")
-
-
 
 def get_pixel_color(image_path, x, y):
     try:
@@ -68,9 +46,7 @@ def get_pixel_color(image_path, x, y):
 
 
 
-if __name__ == "__main__":
-
-    
+if __name__ == "__main__":    
 
     # read word list from file
     with open("shuffled_word_list.txt", "r") as f:
@@ -93,7 +69,6 @@ if __name__ == "__main__":
         print("Current word list length:", len(word_list))
         if i == 0:
             guess = starting_guess
-            #guess = random.choice(word_list)
         else:
             word_list = update_word_list(word_list, non_allowed_letters, allowed_letters, correct_letters)
             guess = random.choice(word_list)
@@ -131,20 +106,6 @@ if __name__ == "__main__":
       
                 
         if screenshot_region:
-            # Extract text from the captured image using the VLM
-            if not USE_VLM:
-                extracted_text = guess
-            # else:
-            #     print("VLM is processing the image...", flush=True)
-            #     extracted_text = get_characters(img_base64)
-
-            #     if extracted_text is None:
-            #         print("VLM Error: No text extracted from the image.")
-            #         exit(1) # TODO: handle VLM error
-
-            #     # convert to lowercase
-            #     extracted_text = extracted_text.lower()
-
             # get color of each letter
             colors_pixels = []
             colors = []
@@ -164,21 +125,21 @@ if __name__ == "__main__":
 
             correct_letter_count = 0
             # update word list
-            for letter, color in zip(extracted_text, colors):
+            for letter, color in zip(guess, colors):
                 #print(f"Letter: {letter}, Color: {color}")
                 if color == "green":
-                    correct_letters[letter] = extracted_text.index(letter)
+                    correct_letters[letter] = guess.index(letter)
                     print(f"Correct letter: {letter} at position {correct_letters[letter]}")
                     correct_letter_count += 1
                 elif color == "yellow":
-                    allowed_letters[letter].append(extracted_text.index(letter))
+                    allowed_letters[letter].append(guess.index(letter))
                     print(f"Allowed letter: {letter} but not at position {allowed_letters[letter]}")
                 elif color == "gray":
                     non_allowed_letters.add(letter)
                     print(f"Non-allowed letter: {letter}")
                 
             if correct_letter_count == 5:
-                print("Wordle solved! The word was: ", extracted_text)
+                print("Wordle solved! The word was: ", guess)
                 exit(0)
 
         region_coordinates = (region_coordinates[0], region_coordinates[1] + 70, region_coordinates[2], region_coordinates[3] + 70)

@@ -10,9 +10,9 @@ import random
 from collections import defaultdict
 from utilities.solver_logic import update_word_list
 import os
+import shutil
 
-
-starting_guess = "salet"
+starting_guess = "kudzu"
 
 
 region_coordinates = (300, 192, 646, 254) # (left, top, right, bottom)
@@ -43,10 +43,24 @@ def get_pixel_color(image_path, x, y):
         print(f"Error: Pixel coordinates ({x}, {y}) are out of bounds for the image.")
         exit(1)
     
+def clear_folder(folder_path):
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
 
 
 
 if __name__ == "__main__":    
+
+    clear_folder("screenshots")
+    clear_folder("word_list_history")
+
 
     # read word list from file
     with open("shuffled_word_list.txt", "r") as f:
@@ -66,12 +80,22 @@ if __name__ == "__main__":
 
     for i in range(6):
         print("Guess #", i + 1)
-        print("Current word list length:", len(word_list))
         if i == 0:
             guess = starting_guess
         else:
             word_list = update_word_list(word_list, non_allowed_letters, allowed_letters, correct_letters)
-            guess = random.choice(word_list)
+            # save word list to history directory
+            with open(f"word_list_history/word_list_{i}.txt", "w") as f:
+                f.write("\n".join(word_list))
+            
+            if len(word_list) == 0:
+                print("No more words left to guess. Exiting.")
+                exit(0)
+
+            # look for a word with no repeating letters if possible (to maximize information gain)
+            guess = next((word for word in word_list if len(set(word)) == len(word)), random.choice(word_list))
+
+        print("Current word list length:", len(word_list))
         print("Guess:", guess)
 
 

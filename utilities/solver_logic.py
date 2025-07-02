@@ -1,18 +1,28 @@
-DEBUG = False
-
+from collections import Counter
+DEBUG = False  # Set to True to enable debug output
 
 def update_word_list(word_list, non_allowed_letters, allowed_letters, correct_letters):
     new_word_list = []
 
-    non_allowed_letters = non_allowed_letters - set(correct_letters.keys())  # remove correct letters from non-allowed letters
+    # Letters that must appear in the word but not at specific positions
+    required_letters = set(allowed_letters.keys()) | set(correct_letters.keys())
 
     for word in word_list:
         if DEBUG:
             print(f"\nChecking word: {word}")
 
+        # Check correct positions
+        correct_fail = False
+        for letter, pos in correct_letters.items():
+            if word[pos] != letter:
+                if DEBUG:
+                    print(f"Rejected (expected '{letter}' at position {pos})")
+                correct_fail = True
+                break
+        if correct_fail:
+            continue
 
-
-        # exclude if allowed letter is in a forbidden position or if allowed letter is missing
+        # Check allowed letters not in forbidden positions
         allowed_fail = False
         for letter, bad_positions in allowed_letters.items():
             if letter not in word:
@@ -31,26 +41,38 @@ def update_word_list(word_list, non_allowed_letters, allowed_letters, correct_le
         if allowed_fail:
             continue
 
-        # exclude if correct letters not in the correct positions
-        correct_fail = False
-        for letter, pos in correct_letters.items():
-            if word[pos] != letter:
+        # Count how often each letter appears in the guess
+        word_counter = Counter(word)
+
+        # Reject if word contains a non-allowed letter that shouldn't be there at all
+        for letter in word_counter:
+            if (letter in non_allowed_letters and
+                letter not in allowed_letters and
+                letter not in correct_letters):
                 if DEBUG:
-                    print(f"Rejected (expected '{letter}' at position {pos})")
-                correct_fail = True
+                    print(f"Rejected (non-allowed letter '{letter}' in word)")
                 break
-        if correct_fail:
-            continue
+        else:
+            # Enforce max count logic (e.g., only 1 'u' allowed if 2nd 'u' was gray)
+            # Build total allowed count from correct + allowed letters
+            max_counts = Counter()
+            for letter in allowed_letters:
+                max_counts[letter] += 1  # each yellow means at least one
+            for letter in correct_letters:
+                max_counts[letter] += 1
 
-        # exclude if contains any non-allowed letter
-        if any(letter in non_allowed_letters for letter in word):
+            over_limit = False
+            for letter, count in word_counter.items():
+                if letter in max_counts and count > max_counts[letter]:
+                    if DEBUG:
+                        print(f"Rejected (too many '{letter}' – has {count}, allowed {max_counts[letter]})")
+                    over_limit = True
+                    break
+            if over_limit:
+                continue
+
             if DEBUG:
-                print(f"Rejected (non-allowed letter in '{word}')")
-            continue
-
-        # if we reach here, the word is valid to consider
-        if DEBUG:
-            print(f"Accepted word: {word}")
-        new_word_list.append(word)
+                print(f"Accepted word: {word}")
+            new_word_list.append(word)
 
     return new_word_list

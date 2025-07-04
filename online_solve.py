@@ -12,7 +12,7 @@ from utilities.solver_logic import update_word_list
 import os
 import shutil
 
-starting_guess = "kudzu"
+starting_guess = "salet"
 
 
 region_coordinates = (300, 192, 646, 254) # (left, top, right, bottom)

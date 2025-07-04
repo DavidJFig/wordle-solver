@@ -1,4 +1,2 @@
-occur
-inrun
-rohun
-incur
+curie
+curve
